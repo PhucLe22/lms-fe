@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { isAxiosError } from "axios";
 import { courseApi } from "../../api/courseApi";
 import { progressApi } from "../../api/progressApi";
 import { quizApi } from "../../api/quizApi";
@@ -10,6 +11,16 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import Spinner from "../../components/ui/Spinner";
 import EmptyState from "../../components/ui/EmptyState";
+
+function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (isAxiosError(error)) {
+    const msg = error.response?.data?.message;
+    if (msg && typeof msg === "string") return msg;
+    if (error.response?.status) return `Server error (${error.response.status})`;
+    if (error.code === "ERR_NETWORK") return "Cannot connect to server. Please check your connection.";
+  }
+  return fallback;
+}
 
 function getYouTubeId(url: string): string | null {
   const match = url.match(
@@ -27,6 +38,7 @@ export default function LessonStudyPage() {
   const [course, setCourse] = useState<CourseDetailDto | null>(null);
   const [progress, setProgress] = useState<CourseProgressDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -39,9 +51,10 @@ export default function LessonStudyPage() {
   const watchIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastSentPercentRef = useRef(0);
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
     if (!courseId) return;
     setIsLoading(true);
+    setLoadError(null);
     const promises: Promise<unknown>[] = [
       courseApi.getById(courseId).then((res) => setCourse(res.data)),
     ];
@@ -51,10 +64,17 @@ export default function LessonStudyPage() {
       );
     }
     Promise.all(promises)
-      .catch(() => toast.error("Failed to load lesson data"))
+      .catch((err) => {
+        const msg = getApiErrorMessage(err, "Failed to load lesson data");
+        setLoadError(msg);
+        toast.error(msg);
+      })
       .finally(() => setIsLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId, isStudent]);
+  }, [courseId, isStudent, toast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Reset requirements when lesson changes
   useEffect(() => {
@@ -107,8 +127,8 @@ export default function LessonStudyPage() {
       const res = await progressApi.getCourseProgress(courseId);
       setProgress(res.data);
       toast.success("Lesson completed");
-    } catch {
-      toast.error("Failed to complete lesson");
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to complete lesson"));
     } finally {
       setActionLoading(false);
     }
@@ -197,6 +217,19 @@ export default function LessonStudyPage() {
 
   if (isLoading) {
     return <div className="flex justify-center items-center py-32"><Spinner size="lg" /></div>;
+  }
+
+  if (loadError) {
+    return (
+      <EmptyState title="Failed to load lesson" description={loadError}
+        action={
+          <div className="flex gap-2">
+            <Button variant="primary" size="sm" onClick={loadData}>Retry</Button>
+            <Link to="/"><Button variant="secondary" size="sm">Back to Courses</Button></Link>
+          </div>
+        }
+      />
+    );
   }
 
   if (!course) {

@@ -10,4 +10,10 @@ export const authApi = {
 
   getMe: () =>
     axiosClient.get<User>("/auth/me"),
+
+  forgotPassword: (email: string) =>
+    axiosClient.post<{ message: string }>("/auth/forgot-password", { email }),
+
+  resetPassword: (token: string, newPassword: string) =>
+    axiosClient.post<{ message: string }>("/auth/reset-password", { token, newPassword }),
 };

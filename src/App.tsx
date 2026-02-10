@@ -9,12 +9,16 @@ import ToastContainer from "./components/ui/ToastContainer";
 // Pages
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import CourseListPage from "./pages/courses/CourseListPage";
 import CourseDetailPage from "./pages/courses/CourseDetailPage";
 import CourseFormPage from "./pages/courses/CourseFormPage";
 import MyCoursesPage from "./pages/student/MyCoursesPage";
 import CourseProgressPage from "./pages/student/CourseProgressPage";
 import AdminLessonsPage from "./pages/admin/AdminLessonsPage";
+import AdminStudentsPage from "./pages/admin/AdminStudentsPage";
+import AdminStudentDetailPage from "./pages/admin/AdminStudentDetailPage";
 import LessonStudyPage from "./pages/courses/LessonStudyPage";
 
 export default function App() {
@@ -29,6 +33,8 @@ export default function App() {
                 {/* Public Routes */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/" element={<CourseListPage />} />
                 <Route path="/courses/:id" element={<CourseDetailPage />} />
                 <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonStudyPage />} />
@@ -55,6 +61,22 @@ export default function App() {
                   element={
                     <ProtectedRoute role="Admin">
                       <AdminLessonsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/students"
+                  element={
+                    <ProtectedRoute role="Admin">
+                      <AdminStudentsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/students/:id"
+                  element={
+                    <ProtectedRoute role="Admin">
+                      <AdminStudentDetailPage />
                     </ProtectedRoute>
                   }
                 />

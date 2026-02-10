@@ -97,6 +97,35 @@ export interface CourseProgressDto {
   lessons: LessonProgressDto[];
 }
 
+// === Admin / Student ===
+export interface StudentListDto {
+  id: string;
+  fullName: string;
+  email: string;
+  role: "Admin" | "Student";
+  createdAt: string;
+  enrolledCourses: number;
+}
+
+export interface StudentDetailDto {
+  id: string;
+  fullName: string;
+  email: string;
+  role: "Admin" | "Student";
+  createdAt: string;
+  enrollments: StudentEnrollmentDto[];
+}
+
+export interface StudentEnrollmentDto {
+  courseId: string;
+  courseTitle: string;
+  enrolledAt: string;
+  status: "Active" | "Completed";
+  completedLessons: number;
+  totalLessons: number;
+  progressPercent: number;
+}
+
 // === Pagination ===
 export interface PaginatedResult<T> {
   items: T[];

@@ -56,9 +56,14 @@ export default function Navbar() {
                 </Link>
               )}
               {isAdmin && (
-                <Link to="/courses/new" className={navLinkClass("/courses/new")}>
-                  Create Course
-                </Link>
+                <>
+                  <Link to="/courses/new" className={navLinkClass("/courses/new")}>
+                    Create Course
+                  </Link>
+                  <Link to="/admin/students" className={navLinkClass("/admin/students")}>
+                    Students
+                  </Link>
+                </>
               )}
             </div>
           )}
@@ -124,9 +129,14 @@ export default function Navbar() {
             </Link>
           )}
           {isAdmin && (
-            <Link to="/courses/new" onClick={() => setMobileOpen(false)} className="block py-2 text-sm text-gray-600 hover:text-gray-900">
-              Create Course
-            </Link>
+            <>
+              <Link to="/courses/new" onClick={() => setMobileOpen(false)} className="block py-2 text-sm text-gray-600 hover:text-gray-900">
+                Create Course
+              </Link>
+              <Link to="/admin/students" onClick={() => setMobileOpen(false)} className="block py-2 text-sm text-gray-600 hover:text-gray-900">
+                Students
+              </Link>
+            </>
           )}
           <button
             onClick={() => { setMobileOpen(false); handleLogout(); }}

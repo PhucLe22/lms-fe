@@ -10,7 +10,7 @@ import Alert from "../../components/ui/Alert";
 import Card from "../../components/ui/Card";
 
 export default function LoginPage() {
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginRequest>();
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginRequest>();
   const { login } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState("");
@@ -90,15 +90,27 @@ export default function LoginPage() {
           </Link>
         </p>
 
-        <details className="mt-5 pt-4 border-t border-gray-100">
-          <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-500">
-            Demo credentials
-          </summary>
-          <div className="mt-2 text-xs text-gray-400 space-y-0.5">
-            <p>Admin: admin@lms.com / Admin@123</p>
-            <p>Student: studenta@lms.com / Student@123</p>
+        <div className="mt-5 pt-4 border-t border-gray-100">
+          <p className="text-xs text-gray-400 mb-2">Quick login</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => { setValue("email", "admin@lms.com"); setValue("password", "Admin@123"); }}
+              className="flex-1 text-xs text-gray-500 border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer text-left"
+            >
+              <span className="font-medium block">Admin</span>
+              <span className="text-gray-400">admin@lms.com</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setValue("email", "studenta@lms.com"); setValue("password", "Student@123"); }}
+              className="flex-1 text-xs text-gray-500 border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 hover:text-gray-900 transition-colors cursor-pointer text-left"
+            >
+              <span className="font-medium block">Student</span>
+              <span className="text-gray-400">studenta@lms.com</span>
+            </button>
           </div>
-        </details>
+        </div>
       </Card>
     </div>
   );

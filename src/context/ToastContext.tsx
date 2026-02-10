@@ -1,4 +1,4 @@
-import { useState, useCallback, type ReactNode } from "react";
+import { useState, useCallback, useEffect, type ReactNode } from "react";
 import { ToastContext, type Toast } from "../hooks/useToast";
 
 let nextId = 0;
@@ -18,6 +18,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     },
     [removeToast]
   );
+
+  // Listen for toast events from outside React (e.g. axios interceptors)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { message, variant } = (e as CustomEvent).detail;
+      addToast(message, variant);
+    };
+    window.addEventListener("app:toast", handler);
+    return () => window.removeEventListener("app:toast", handler);
+  }, [addToast]);
 
   const toast = {
     success: (message: string) => addToast(message, "success"),

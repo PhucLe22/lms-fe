@@ -117,6 +117,11 @@ export default function CourseDetailPage() {
       <PageHeader title={course.title} backTo="/" backLabel="Courses" />
 
       <div>
+        <div className="flex items-center gap-2 mb-2">
+          <Badge variant={course.level === "Beginner" ? "success" : course.level === "Intermediate" ? "warning" : "danger"}>
+            {course.level}
+          </Badge>
+        </div>
         <p className="text-gray-500 text-sm">{course.description}</p>
         <p className="text-xs text-gray-400 mt-2">By {course.creatorName}</p>
       </div>
@@ -159,6 +164,12 @@ export default function CourseDetailPage() {
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-gray-400 font-mono">{String(lesson.orderIndex + 1).padStart(2, "0")}</span>
                         <h3 className="text-sm font-medium text-gray-900">{lesson.title}</h3>
+                        {lesson.videoUrl && (
+                          <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-label="Has video"><path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        )}
+                        {lesson.documentUrl && (
+                          <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-label="Has document"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        )}
                       </div>
                       <p className="text-gray-500 mt-1 text-sm pl-7 line-clamp-2">{lesson.content}</p>
                     </div>

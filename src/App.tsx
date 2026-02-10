@@ -20,6 +20,12 @@ import AdminLessonsPage from "./pages/admin/AdminLessonsPage";
 import AdminStudentsPage from "./pages/admin/AdminStudentsPage";
 import AdminStudentDetailPage from "./pages/admin/AdminStudentDetailPage";
 import LessonStudyPage from "./pages/courses/LessonStudyPage";
+import DashboardPage from "./pages/student/DashboardPage";
+import QuizPage from "./pages/quiz/QuizPage";
+import AdminQuizPage from "./pages/quiz/AdminQuizPage";
+import PracticePage from "./pages/practice/PracticePage";
+import AdminPracticePage from "./pages/practice/AdminPracticePage";
+import AdminSystemPage from "./pages/admin/AdminSystemPage";
 
 export default function App() {
   return (
@@ -38,6 +44,8 @@ export default function App() {
                 <Route path="/" element={<CourseListPage />} />
                 <Route path="/courses/:id" element={<CourseDetailPage />} />
                 <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonStudyPage />} />
+                <Route path="/courses/:courseId/lessons/:lessonId/quiz" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
+                <Route path="/courses/:courseId/lessons/:lessonId/practice" element={<ProtectedRoute><PracticePage /></ProtectedRoute>} />
 
                 {/* Admin Routes */}
                 <Route
@@ -80,8 +88,41 @@ export default function App() {
                     </ProtectedRoute>
                   }
                 />
+                <Route
+                  path="/admin/lessons/:courseId/:lessonId/quiz"
+                  element={
+                    <ProtectedRoute role="Admin">
+                      <AdminQuizPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/lessons/:courseId/:lessonId/practice"
+                  element={
+                    <ProtectedRoute role="Admin">
+                      <AdminPracticePage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/admin/system"
+                  element={
+                    <ProtectedRoute role="Admin">
+                      <AdminSystemPage />
+                    </ProtectedRoute>
+                  }
+                />
 
                 {/* Student Routes */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute role="Student">
+                      <DashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/my-courses"
                   element={

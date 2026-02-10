@@ -2,15 +2,16 @@ import axiosClient from "./axiosClient";
 import type {
   CourseDto,
   CourseDetailDto,
+  CourseLevel,
   CreateCourseRequest,
   UpdateCourseRequest,
   PaginatedResult,
 } from "../types";
 
 export const courseApi = {
-  getAll: (page = 1, pageSize = 10, search?: string) =>
+  getAll: (page = 1, pageSize = 10, search?: string, level?: CourseLevel) =>
     axiosClient.get<PaginatedResult<CourseDto>>("/courses", {
-      params: { page, pageSize, search },
+      params: { page, pageSize, search, level },
     }),
 
   getById: (id: string) =>

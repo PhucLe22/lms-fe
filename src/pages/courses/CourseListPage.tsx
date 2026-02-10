@@ -4,16 +4,33 @@ import { courseApi } from "../../api/courseApi";
 import { useAuth } from "../../hooks/useAuth";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useToast } from "../../hooks/useToast";
-import type { CourseDto, PaginatedResult } from "../../types";
+import type { CourseDto, CourseLevel, PaginatedResult } from "../../types";
 import PageHeader from "../../components/ui/PageHeader";
 import Button from "../../components/ui/Button";
+import Badge from "../../components/ui/Badge";
 import Card from "../../components/ui/Card";
 import { SkeletonCard } from "../../components/ui/Skeleton";
 import EmptyState from "../../components/ui/EmptyState";
 
+const LEVELS: { value: CourseLevel | ""; label: string }[] = [
+  { value: "", label: "All Levels" },
+  { value: "Beginner", label: "Beginner" },
+  { value: "Intermediate", label: "Intermediate" },
+  { value: "Advanced", label: "Advanced" },
+];
+
+const levelBadgeVariant = (level: CourseLevel) => {
+  switch (level) {
+    case "Beginner": return "success" as const;
+    case "Intermediate": return "warning" as const;
+    case "Advanced": return "danger" as const;
+  }
+};
+
 export default function CourseListPage() {
   const [data, setData] = useState<PaginatedResult<CourseDto> | null>(null);
   const [search, setSearch] = useState("");
+  const [level, setLevel] = useState<CourseLevel | "">("");
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const { isAdmin } = useAuth();
@@ -24,7 +41,7 @@ export default function CourseListPage() {
     let cancelled = false;
     setIsLoading(true);
     courseApi
-      .getAll(page, 10, debouncedSearch || undefined)
+      .getAll(page, 10, debouncedSearch || undefined, level || undefined)
       .then((res) => {
         if (!cancelled) setData(res.data);
       })
@@ -36,10 +53,15 @@ export default function CourseListPage() {
       });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, level]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
+    setPage(1);
+  };
+
+  const handleLevel = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setLevel(e.target.value as CourseLevel | "");
     setPage(1);
   };
 
@@ -56,25 +78,37 @@ export default function CourseListPage() {
         }
       />
 
-      <div className="relative">
-        <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-          aria-hidden="true"
+      <div className="flex gap-3">
+        <div className="relative flex-1">
+          <svg
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search courses..."
+            value={search}
+            onChange={handleSearch}
+            aria-label="Search courses"
+            className="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 text-sm text-gray-900 placeholder-gray-400 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1 focus:border-transparent"
+          />
+        </div>
+        <select
+          value={level}
+          onChange={handleLevel}
+          aria-label="Filter by level"
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1 focus:border-transparent cursor-pointer"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        <input
-          type="text"
-          placeholder="Search courses..."
-          value={search}
-          onChange={handleSearch}
-          aria-label="Search courses"
-          className="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 text-sm text-gray-900 placeholder-gray-400 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1 focus:border-transparent"
-        />
+          {LEVELS.map((l) => (
+            <option key={l.value} value={l.value}>{l.label}</option>
+          ))}
+        </select>
       </div>
 
       {isLoading ? (
@@ -89,8 +123,11 @@ export default function CourseListPage() {
             {data.items.map((course) => (
               <Link key={course.id} to={`/courses/${course.id}`}>
                 <Card hover className="h-full">
-                  <h2 className="text-sm font-semibold text-gray-900">{course.title}</h2>
-                  <p className="text-gray-500 text-sm mt-1.5 line-clamp-2">{course.description || "No description"}</p>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h2 className="text-sm font-semibold text-gray-900 truncate">{course.title}</h2>
+                    <Badge variant={levelBadgeVariant(course.level)}>{course.level}</Badge>
+                  </div>
+                  <p className="text-gray-500 text-sm line-clamp-2">{course.description || "No description"}</p>
                   <div className="flex justify-between mt-4 text-xs text-gray-400">
                     <span>{course.lessonCount} lessons</span>
                     <span>{course.enrollmentCount} enrolled</span>
@@ -122,7 +159,7 @@ export default function CourseListPage() {
       ) : (
         <EmptyState
           title="No courses found"
-          description={search ? "Try a different search term" : "No courses have been created yet"}
+          description={search || level ? "Try a different search term or filter" : "No courses have been created yet"}
         />
       )}
     </div>

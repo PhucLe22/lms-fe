@@ -25,7 +25,7 @@ export default function CourseFormPage() {
         .getById(id)
         .then((res) => {
           setCourse(res.data);
-          reset({ title: res.data.title, description: res.data.description });
+          reset({ title: res.data.title, description: res.data.description, level: res.data.level });
         })
         .catch(() => toast.error("Failed to load course"));
     }
@@ -66,6 +66,20 @@ export default function CourseFormPage() {
           error={errors.title?.message}
           {...register("title", { required: "Title is required", minLength: { value: 3, message: "Title must be at least 3 characters" } })}
         />
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Level</label>
+          <select
+            {...register("level", { required: "Level is required" })}
+            className={`w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1 focus:border-transparent cursor-pointer ${errors.level ? "border-red-400 focus:ring-red-500" : ""}`}
+          >
+            <option value="">Select level</option>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+          {errors.level && <p className="text-red-500 text-xs mt-1.5">{errors.level.message}</p>}
+        </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>

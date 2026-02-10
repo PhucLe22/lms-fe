@@ -51,9 +51,14 @@ export default function Navbar() {
                 Courses
               </Link>
               {isStudent && (
-                <Link to="/my-courses" className={navLinkClass("/my-courses")}>
-                  My Courses
-                </Link>
+                <>
+                  <Link to="/dashboard" className={navLinkClass("/dashboard")}>
+                    Dashboard
+                  </Link>
+                  <Link to="/my-courses" className={navLinkClass("/my-courses")}>
+                    My Courses
+                  </Link>
+                </>
               )}
               {isAdmin && (
                 <>
@@ -62,6 +67,9 @@ export default function Navbar() {
                   </Link>
                   <Link to="/admin/students" className={navLinkClass("/admin/students")}>
                     Students
+                  </Link>
+                  <Link to="/admin/system" className={navLinkClass("/admin/system")}>
+                    System
                   </Link>
                 </>
               )}
@@ -124,9 +132,14 @@ export default function Navbar() {
             Courses
           </Link>
           {isStudent && (
-            <Link to="/my-courses" onClick={() => setMobileOpen(false)} className="block py-2 text-sm text-gray-600 hover:text-gray-900">
-              My Courses
-            </Link>
+            <>
+              <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block py-2 text-sm text-gray-600 hover:text-gray-900">
+                Dashboard
+              </Link>
+              <Link to="/my-courses" onClick={() => setMobileOpen(false)} className="block py-2 text-sm text-gray-600 hover:text-gray-900">
+                My Courses
+              </Link>
+            </>
           )}
           {isAdmin && (
             <>
@@ -135,6 +148,9 @@ export default function Navbar() {
               </Link>
               <Link to="/admin/students" onClick={() => setMobileOpen(false)} className="block py-2 text-sm text-gray-600 hover:text-gray-900">
                 Students
+              </Link>
+              <Link to="/admin/system" onClick={() => setMobileOpen(false)} className="block py-2 text-sm text-gray-600 hover:text-gray-900">
+                System
               </Link>
             </>
           )}

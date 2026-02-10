@@ -26,10 +26,13 @@ export interface User {
 }
 
 // === Course ===
+export type CourseLevel = "Beginner" | "Intermediate" | "Advanced";
+
 export interface CourseDto {
   id: string;
   title: string;
   description: string;
+  level: CourseLevel;
   creatorName: string;
   createdAt: string;
   lessonCount: number;
@@ -40,6 +43,7 @@ export interface CourseDetailDto {
   id: string;
   title: string;
   description: string;
+  level: CourseLevel;
   creatorName: string;
   createdAt: string;
   lessons: LessonDto[];
@@ -48,11 +52,13 @@ export interface CourseDetailDto {
 export interface CreateCourseRequest {
   title: string;
   description?: string;
+  level: CourseLevel;
 }
 
 export interface UpdateCourseRequest {
   title: string;
   description?: string;
+  level: CourseLevel;
 }
 
 // === Lesson ===
@@ -60,6 +66,8 @@ export interface LessonDto {
   id: string;
   title: string;
   content: string;
+  videoUrl: string | null;
+  documentUrl: string | null;
   orderIndex: number;
   createdAt: string;
 }
@@ -68,6 +76,8 @@ export interface CreateLessonRequest {
   title: string;
   content: string;
   orderIndex: number;
+  videoUrl?: string;
+  documentUrl?: string;
 }
 
 // === Enrollment ===
@@ -86,6 +96,7 @@ export interface LessonProgressDto {
   orderIndex: number;
   isCompleted: boolean;
   completedAt: string | null;
+  videoWatchPercent: number;
 }
 
 export interface CourseProgressDto {
@@ -124,6 +135,99 @@ export interface StudentEnrollmentDto {
   completedLessons: number;
   totalLessons: number;
   progressPercent: number;
+}
+
+// === Quiz ===
+export type QuizAnswer = "A" | "B" | "C" | "D";
+
+export interface QuizDto {
+  id: string;
+  question: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctAnswer: QuizAnswer;
+  orderIndex: number;
+}
+
+export interface CreateQuizRequest {
+  question: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctAnswer: QuizAnswer;
+}
+
+export interface QuizSubmitRequest {
+  answers: { quizId: string; answer: QuizAnswer }[];
+}
+
+export interface QuizResultDto {
+  lessonId: string;
+  score: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  submittedAt: string;
+  details: QuizResultDetailDto[];
+}
+
+export interface QuizResultDetailDto {
+  quizId: string;
+  question: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  selectedAnswer: QuizAnswer;
+  correctAnswer: QuizAnswer;
+  isCorrect: boolean;
+}
+
+// === Practice ===
+export interface PracticeTaskDto {
+  id: string;
+  lessonId: string;
+  title: string;
+  description: string;
+  submissionType: "Text" | "GitUrl";
+}
+
+export interface CreatePracticeTaskRequest {
+  title: string;
+  description: string;
+  submissionType: "Text" | "GitUrl";
+}
+
+export interface PracticeSubmissionDto {
+  id: string;
+  practiceTaskId: string;
+  studentName: string;
+  content: string;
+  submittedAt: string;
+}
+
+export interface SubmitPracticeRequest {
+  content: string;
+}
+
+// === Dashboard ===
+export interface DashboardDto {
+  enrolledCourses: number;
+  completedCourses: number;
+  overallProgress: number;
+  avgQuizScore: number;
+  courses: DashboardCourseDto[];
+}
+
+export interface DashboardCourseDto {
+  courseId: string;
+  courseTitle: string;
+  progressPercent: number;
+  completedLessons: number;
+  totalLessons: number;
+  quizAvgScore: number;
 }
 
 // === Pagination ===

@@ -8,6 +8,9 @@ export const progressApi = {
   getCourseProgress: (courseId: string) =>
     axiosClient.get<CourseProgressDto>(`/courses/${courseId}/progress`),
 
+  uncompleteLesson: (lessonId: string) =>
+    axiosClient.post<LessonProgressDto>(`/lessons/${lessonId}/uncomplete`),
+
   updateWatchProgress: (lessonId: string, watchPercent: number) =>
     axiosClient.put<LessonProgressDto>(`/lessons/${lessonId}/watch-progress`, { watchPercent }),
 };

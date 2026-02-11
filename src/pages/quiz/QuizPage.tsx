@@ -63,7 +63,6 @@ export default function QuizPage() {
       promises.push(
         quizApi.getResult(lessonId).then((res) => {
           setResult(res.data);
-          setSubmitted(true);
         }).catch(() => {})
       );
     } else if (isAdmin) {
@@ -153,18 +152,20 @@ export default function QuizPage() {
         </Alert>
       )}
 
-      {/* Previous result */}
-      {submitted && result && (
+      {/* Result */}
+      {result && (
         <Card padding="lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Your Score</p>
+              <p className="text-sm text-gray-500">{submitted ? "Your Score" : "Previous Score"}</p>
               <p className="text-3xl font-semibold text-gray-900">{Math.round(result.score)}%</p>
               <p className="text-xs text-gray-400 mt-1">
                 {result.correctAnswers}/{result.totalQuestions} correct
               </p>
             </div>
-            <Button variant="secondary" size="sm" onClick={handleRetake}>Retake</Button>
+            {submitted && (
+              <Button variant="secondary" size="sm" onClick={handleRetake}>Retake</Button>
+            )}
           </div>
         </Card>
       )}
@@ -176,7 +177,7 @@ export default function QuizPage() {
           {/* Questions */}
           <div className="space-y-4">
             {quizzes.map((quiz, qi) => {
-              const detail = result?.details?.find((d) => d.quizId === quiz.id);
+              const detail = submitted ? result?.details?.find((d) => d.quizId === quiz.id) : undefined;
               const options = detail ? getResultOptions(detail) : getQuizOptions(quiz);
               return (
                 <Card key={quiz.id} padding="md">

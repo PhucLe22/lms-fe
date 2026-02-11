@@ -1,16 +1,21 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
+import { useForm } from "react-hook-form";
 import { courseApi } from "../../api/courseApi";
+import { enrollmentApi } from "../../api/enrollmentApi";
+import { lessonApi } from "../../api/lessonApi";
 import { progressApi } from "../../api/progressApi";
 import { quizApi } from "../../api/quizApi";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../hooks/useToast";
-import type { CourseDetailDto, CourseProgressDto, LessonDto } from "../../types";
+import type { CourseDetailDto, CourseProgressDto, LessonDto, CreateLessonRequest } from "../../types";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
+import Input from "../../components/ui/Input";
 import Spinner from "../../components/ui/Spinner";
 import EmptyState from "../../components/ui/EmptyState";
+import ProgressBar from "../../components/ui/ProgressBar";
 
 function getApiErrorMessage(error: unknown, fallback: string): string {
   if (isAxiosError(error)) {
@@ -31,7 +36,7 @@ function getYouTubeId(url: string): string | null {
 
 export default function LessonStudyPage() {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
-  const { isStudent, user } = useAuth();
+  const { isStudent, isAdmin, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -39,7 +44,7 @@ export default function LessonStudyPage() {
   const [progress, setProgress] = useState<CourseProgressDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [enrolled, setEnrolled] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Completion requirements
@@ -50,6 +55,7 @@ export default function LessonStudyPage() {
   const ytPlayerRef = useRef<any>(null);
   const watchIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastSentPercentRef = useRef(0);
+  const watchRequestPending = useRef(false);
 
   const loadData = useCallback(() => {
     if (!courseId) return;
@@ -60,6 +66,9 @@ export default function LessonStudyPage() {
     ];
     if (isStudent) {
       promises.push(
+        enrollmentApi.myCourses()
+          .then((res) => setEnrolled(res.data.some((e) => e.courseId === courseId)))
+          .catch(() => {}),
         progressApi.getCourseProgress(courseId).then((res) => setProgress(res.data)).catch(() => {})
       );
     }
@@ -114,25 +123,21 @@ export default function LessonStudyPage() {
   const lessonProgress = progress?.lessons.find((l) => l.lessonId === lessonId);
   const isCompleted = lessonProgress?.isCompleted ?? false;
 
+  const isLessonUnlocked = useCallback((index: number) => {
+    if (isAdmin) return true;
+    if (index === 0) return true;
+    const currentLp = progress?.lessons.find((l) => l.lessonId === sortedLessons[index]?.id);
+    if (currentLp?.isCompleted) return true;
+    const prevLp = progress?.lessons.find((l) => l.lessonId === sortedLessons[index - 1]?.id);
+    return !!prevLp?.isCompleted;
+  }, [isAdmin, progress, sortedLessons]);
+
+  const currentLessonUnlocked = isLessonUnlocked(currentIndex);
+
   const goToLesson = useCallback(
     (lesson: LessonDto) => navigate(`/courses/${courseId}/lessons/${lesson.id}`),
     [courseId, navigate]
   );
-
-  const handleComplete = async () => {
-    if (!lessonId || !courseId) return;
-    setActionLoading(true);
-    try {
-      await progressApi.completeLesson(lessonId);
-      const res = await progressApi.getCourseProgress(courseId);
-      setProgress(res.data);
-      toast.success("Lesson completed");
-    } catch (err) {
-      toast.error(getApiErrorMessage(err, "Failed to complete lesson"));
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   const youtubeId = currentLesson?.videoUrl ? getYouTubeId(currentLesson.videoUrl) : null;
 
@@ -173,10 +178,13 @@ export default function LessonStudyPage() {
         if (!duration || duration <= 0) return;
         const percent = Math.round((player.getCurrentTime() / duration) * 100);
         setVideoWatchPercent((prev) => Math.max(prev, percent));
-        // Send to backend every 10% increase
-        if (percent >= lastSentPercentRef.current + 10) {
+        // Send to backend every 10% increase, skip if previous request still pending
+        if (percent >= lastSentPercentRef.current + 10 && !watchRequestPending.current) {
+          watchRequestPending.current = true;
           lastSentPercentRef.current = percent;
-          progressApi.updateWatchProgress(lessonId, percent).catch(() => {});
+          progressApi.updateWatchProgress(lessonId, percent)
+            .catch(() => {})
+            .finally(() => { watchRequestPending.current = false; });
         }
       }, 3000);
     };
@@ -215,6 +223,102 @@ export default function LessonStudyPage() {
   const requirementsMet =
     (!hasVideo || videoOk) && (!hasQuiz || quizDone);
 
+  const [completing, setCompleting] = useState(false);
+  const manuallyUncompleted = useRef(false);
+
+  const handleCompleteLesson = useCallback(() => {
+    if (!lessonId || !courseId || completing) return;
+    setCompleting(true);
+    progressApi.completeLesson(lessonId)
+      .then(() => progressApi.getCourseProgress(courseId))
+      .then((res) => {
+        setProgress(res.data);
+        toast.success("Lesson completed!");
+      })
+      .catch(() => toast.error("Failed to complete lesson. Please try again."))
+      .finally(() => setCompleting(false));
+  }, [lessonId, courseId, completing, toast]);
+
+  const handleUncompleteLesson = useCallback(() => {
+    if (!lessonId || !courseId || completing) return;
+    setCompleting(true);
+    manuallyUncompleted.current = true;
+    progressApi.uncompleteLesson(lessonId)
+      .then(() => progressApi.getCourseProgress(courseId))
+      .then((res) => {
+        setProgress(res.data);
+        toast.success("Lesson marked as incomplete");
+      })
+      .catch(() => {
+        manuallyUncompleted.current = false;
+        toast.error("Failed to update lesson status. Please try again.");
+      })
+      .finally(() => setCompleting(false));
+  }, [lessonId, courseId, completing, toast]);
+
+  // Reset manual uncomplete flag when lesson changes
+  useEffect(() => {
+    manuallyUncompleted.current = false;
+  }, [lessonId]);
+
+  // Auto-complete when all requirements are met
+  useEffect(() => {
+    if (!isStudent || !lessonId || !courseId || !progress || isCompleted || !requirementsMet || manuallyUncompleted.current) return;
+    handleCompleteLesson();
+  }, [requirementsMet, isCompleted, progress, isStudent, lessonId, courseId, handleCompleteLesson]);
+
+  // Admin inline edit
+  const [editing, setEditing] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const { register, handleSubmit, reset: resetForm, formState: { errors: formErrors, isSubmitting } } = useForm<CreateLessonRequest>();
+
+  const openEditForm = useCallback(() => {
+    if (!currentLesson) return;
+    resetForm({
+      title: currentLesson.title,
+      content: currentLesson.content,
+      orderIndex: currentLesson.orderIndex,
+      videoUrl: currentLesson.videoUrl || "",
+      documentUrl: currentLesson.documentUrl || "",
+    });
+    setEditing(true);
+  }, [currentLesson, resetForm]);
+
+  const onSubmitEdit = useCallback(async (data: CreateLessonRequest) => {
+    if (!lessonId || !courseId) return;
+    setUploadProgress(0);
+    const payload = {
+      ...data,
+      orderIndex: currentLesson.orderIndex,
+      videoUrl: data.videoUrl?.trim() || undefined,
+      documentUrl: data.documentUrl?.trim() || undefined,
+    };
+    const onProgress = (e: { loaded: number; total?: number }) => {
+      if (e.total) setUploadProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    try {
+      const res = await lessonApi.update(lessonId, payload, onProgress);
+      const updatedLesson = res.data;
+      setUploadProgress(0);
+      toast.success("Lesson updated");
+      setEditing(false);
+      setCourse((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          lessons: prev.lessons.map((l) =>
+            l.id === lessonId ? { ...l, ...updatedLesson } : l
+          ),
+        };
+      });
+    } catch (err) {
+      setUploadProgress(0);
+      const msg = isAxiosError(err) && typeof err.response?.data?.message === "string"
+        ? err.response.data.message : "Failed to update lesson";
+      toast.error(msg);
+    }
+  }, [lessonId, courseId, toast, currentLesson]);
+
   if (isLoading) {
     return <div className="flex justify-center items-center py-32"><Spinner size="lg" /></div>;
   }
@@ -236,6 +340,22 @@ export default function LessonStudyPage() {
     return (
       <EmptyState title="Course not found" description="The course you're looking for doesn't exist"
         action={<Link to="/"><Button variant="secondary" size="sm">Back to Courses</Button></Link>}
+      />
+    );
+  }
+
+  if (isStudent && !enrolled) {
+    return (
+      <EmptyState title="Enrollment required" description="You need to enroll in this course to access lessons"
+        action={<Link to={`/courses/${courseId}`}><Button variant="primary" size="sm">Go to Course</Button></Link>}
+      />
+    );
+  }
+
+  if (isStudent && !currentLessonUnlocked) {
+    return (
+      <EmptyState title="Lesson locked" description="Complete the previous lesson first to unlock this one"
+        action={<Link to={`/courses/${courseId}`}><Button variant="primary" size="sm">Back to Course</Button></Link>}
       />
     );
   }
@@ -279,12 +399,14 @@ export default function LessonStudyPage() {
             {sortedLessons.map((l, i) => {
               const lp = progress?.lessons.find((p) => p.lessonId === l.id);
               const isCurrent = l.id === lessonId;
+              const unlocked = isLessonUnlocked(i);
               return (
                 <button
                   key={l.id}
-                  onClick={() => goToLesson(l)}
-                  className={`w-full text-left px-4 py-3 flex items-center gap-3 text-sm transition-colors cursor-pointer ${
-                    isCurrent ? "bg-gray-100 font-medium text-gray-900" : "text-gray-600 hover:bg-gray-50"
+                  onClick={() => unlocked && goToLesson(l)}
+                  disabled={!unlocked}
+                  className={`w-full text-left px-4 py-3 flex items-center gap-3 text-sm transition-colors ${
+                    !unlocked ? "opacity-40 cursor-not-allowed" : isCurrent ? "bg-gray-100 font-medium text-gray-900 cursor-pointer" : "text-gray-600 hover:bg-gray-50 cursor-pointer"
                   }`}
                 >
                   <span className={`w-6 h-6 rounded flex items-center justify-center text-xs flex-shrink-0 ${
@@ -293,6 +415,10 @@ export default function LessonStudyPage() {
                     {lp?.isCompleted ? (
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : !unlocked ? (
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                       </svg>
                     ) : (
                       i + 1
@@ -317,11 +443,64 @@ export default function LessonStudyPage() {
             {/* Lesson header */}
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-xs text-gray-400 font-mono">{String(currentLesson.orderIndex + 1).padStart(2, "0")}</span>
+                <span className="text-xs text-gray-400 font-mono">{String(currentIndex + 1).padStart(2, "0")}</span>
                 <h1 className="text-xl font-semibold text-gray-900 mt-0.5">{currentLesson.title}</h1>
               </div>
-              {isCompleted && <Badge variant="success">Completed</Badge>}
+              <div className="flex items-center gap-2">
+                {isAdmin && !editing && (
+                  <button
+                    onClick={openEditForm}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium hover:bg-gray-200 transition-colors cursor-pointer"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit
+                  </button>
+                )}
+                {isStudent && isCompleted && (
+                  <button
+                    onClick={handleUncompleteLesson}
+                    disabled={completing}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium hover:bg-emerald-100 transition-colors cursor-pointer disabled:opacity-50"
+                    title="Click to mark as incomplete"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {completing ? "Updating..." : "Completed"}
+                  </button>
+                )}
+                {!isStudent && isCompleted && <Badge variant="success">Completed</Badge>}
+              </div>
             </div>
+
+            {/* Admin inline edit form */}
+            {isAdmin && editing && (
+              <form onSubmit={handleSubmit(onSubmitEdit)} className="border border-gray-200 rounded-lg p-5 space-y-4 bg-gray-50">
+                <h3 className="text-sm font-semibold text-gray-900">Edit Lesson</h3>
+                <Input label="Title" placeholder="Lesson title" error={formErrors.title?.message} {...register("title", { required: "Title is required" })} />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Content</label>
+                  <textarea
+                    placeholder="Lesson content..."
+                    rows={6}
+                    className={`w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1 focus:border-transparent resize-y ${formErrors.content ? "border-red-400 focus:ring-red-500" : ""}`}
+                    {...register("content", { required: "Content is required" })}
+                  />
+                  {formErrors.content && <p className="text-red-500 text-xs mt-1.5">{formErrors.content.message}</p>}
+                </div>
+<Input label="Video URL" type="url" placeholder="https://www.youtube.com/watch?v=..." {...register("videoUrl")} />
+                <Input label="Document URL" type="url" placeholder="https://docs.example.com/..." {...register("documentUrl")} />
+                {isSubmitting && (
+                  <ProgressBar value={uploadProgress} label="Updating..." detail={`${uploadProgress}%`} size="sm" />
+                )}
+                <div className="flex gap-2 pt-1">
+                  <Button type="submit" size="sm" loading={isSubmitting}>Update</Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)} disabled={isSubmitting}>Cancel</Button>
+                </div>
+              </form>
+            )}
 
             {/* Video embed */}
             {youtubeId && (
@@ -386,7 +565,7 @@ export default function LessonStudyPage() {
               </div>
             )}
 
-            {/* Mark as complete */}
+            {/* Completion requirements */}
             {isStudent && !isCompleted && progress && (
               <div className="pt-4 border-t border-gray-100 space-y-3">
                 {(hasVideo || hasQuiz) && (
@@ -427,9 +606,16 @@ export default function LessonStudyPage() {
                     )}
                   </div>
                 )}
-                <Button onClick={handleComplete} loading={actionLoading} disabled={!requirementsMet}>
-                  Mark as Complete
-                </Button>
+                {requirementsMet && (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleCompleteLesson}
+                    disabled={completing}
+                  >
+                    {completing ? "Completing..." : "Complete Lesson"}
+                  </Button>
+                )}
               </div>
             )}
 
@@ -443,7 +629,7 @@ export default function LessonStudyPage() {
                   <span className="truncate max-w-[200px]">{prevLesson.title}</span>
                 </button>
               ) : <div />}
-              {nextLesson ? (
+              {nextLesson && isLessonUnlocked(currentIndex + 1) ? (
                 <button onClick={() => goToLesson(nextLesson)} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer">
                   <span className="truncate max-w-[200px]">{nextLesson.title}</span>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

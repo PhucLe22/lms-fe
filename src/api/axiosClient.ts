@@ -6,6 +6,7 @@ const RETRY_BASE_MS = 1000;
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:5038/api",
   headers: { "Content-Type": "application/json" },
+  timeout: 15000,
 });
 
 // Attach JWT token to every request

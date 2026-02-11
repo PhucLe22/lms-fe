@@ -49,7 +49,7 @@ export default function MyCoursesPage() {
         </div>
       ) : (
         <EmptyState title="No enrolled courses" description="You haven't enrolled in any courses yet"
-          action={<Link to="/"><Button variant="secondary" size="sm">Browse Courses</Button></Link>}
+          action={<Link to="/courses"><Button variant="secondary" size="sm">Browse Courses</Button></Link>}
         />
       )}
     </div>

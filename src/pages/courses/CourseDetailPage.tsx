@@ -108,7 +108,7 @@ export default function CourseDetailPage() {
       <EmptyState
         title="Course not found"
         description="The course you're looking for doesn't exist"
-        action={<Link to="/"><Button variant="secondary" size="sm">Back to Courses</Button></Link>}
+        action={<Link to="/courses"><Button variant="secondary" size="sm">Back to Courses</Button></Link>}
       />
     );
   }

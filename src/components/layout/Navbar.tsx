@@ -47,7 +47,7 @@ export default function Navbar() {
 
           {user && (
             <div className="hidden md:flex items-center gap-6">
-              <Link to="/" className={navLinkClass("/")}>
+              <Link to="/courses" className={navLinkClass("/courses")}>
                 Courses
               </Link>
               {isStudent && (
@@ -128,7 +128,7 @@ export default function Navbar() {
             </div>
             <span className="text-sm text-gray-600">{user.fullName}</span>
           </div>
-          <Link to="/" onClick={() => setMobileOpen(false)} className="block py-2 text-sm text-gray-600 hover:text-gray-900">
+          <Link to="/courses" onClick={() => setMobileOpen(false)} className="block py-2 text-sm text-gray-600 hover:text-gray-900">
             Courses
           </Link>
           {isStudent && (

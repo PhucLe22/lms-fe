@@ -31,7 +31,7 @@ export default function DashboardPage() {
   if (!data) {
     return (
       <EmptyState title="Dashboard unavailable" description="We couldn't load your dashboard data"
-        action={<Link to="/"><Button variant="secondary" size="sm">Browse Courses</Button></Link>}
+        action={<Link to="/courses"><Button variant="secondary" size="sm">Browse Courses</Button></Link>}
       />
     );
   }
@@ -84,7 +84,7 @@ export default function DashboardPage() {
           </div>
         ) : (
           <EmptyState title="No courses yet" description="Enroll in courses to see your progress here"
-            action={<Link to="/"><Button variant="secondary" size="sm">Browse Courses</Button></Link>}
+            action={<Link to="/courses"><Button variant="secondary" size="sm">Browse Courses</Button></Link>}
           />
         )}
       </div>

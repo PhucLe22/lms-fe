@@ -329,7 +329,7 @@ export default function LessonStudyPage() {
         action={
           <div className="flex gap-2">
             <Button variant="primary" size="sm" onClick={loadData}>Retry</Button>
-            <Link to="/"><Button variant="secondary" size="sm">Back to Courses</Button></Link>
+            <Link to="/courses"><Button variant="secondary" size="sm">Back to Courses</Button></Link>
           </div>
         }
       />
@@ -339,7 +339,7 @@ export default function LessonStudyPage() {
   if (!course) {
     return (
       <EmptyState title="Course not found" description="The course you're looking for doesn't exist"
-        action={<Link to="/"><Button variant="secondary" size="sm">Back to Courses</Button></Link>}
+        action={<Link to="/courses"><Button variant="secondary" size="sm">Back to Courses</Button></Link>}
       />
     );
   }

@@ -11,6 +11,7 @@ import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import HomePage from "./pages/HomePage";
 import CourseListPage from "./pages/courses/CourseListPage";
 import CourseDetailPage from "./pages/courses/CourseDetailPage";
 import CourseFormPage from "./pages/courses/CourseFormPage";
@@ -41,7 +42,8 @@ export default function App() {
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/" element={<CourseListPage />} />
+                <Route path="/" element={<HomePage />} />
+                <Route path="/courses" element={<CourseListPage />} />
                 <Route path="/courses/:id" element={<CourseDetailPage />} />
                 <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonStudyPage />} />
                 <Route path="/courses/:courseId/lessons/:lessonId/quiz" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />

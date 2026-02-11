@@ -43,7 +43,7 @@ export default function CourseFormPage() {
         await courseApi.create(data);
         toast.success("Course created");
       }
-      navigate("/");
+      navigate("/courses");
     } catch (err: unknown) {
       const axiosErr = err as AxiosError<{ message?: string }>;
       setError(axiosErr.response?.data?.message || "Failed to save course");
@@ -93,7 +93,7 @@ export default function CourseFormPage() {
 
         <div className="flex gap-2 pt-2">
           <Button type="submit" loading={isLoading}>{isLoading ? "Saving..." : id ? "Update Course" : "Create Course"}</Button>
-          <Link to="/"><Button variant="secondary" type="button">Cancel</Button></Link>
+          <Link to="/courses"><Button variant="secondary" type="button">Cancel</Button></Link>
         </div>
 
         {id && course && (

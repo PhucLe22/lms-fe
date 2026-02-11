@@ -214,10 +214,12 @@ export interface SubmitPracticeRequest {
 
 // === Dashboard ===
 export interface DashboardDto {
-  enrolledCourses: number;
+  totalEnrolledCourses: number;
   completedCourses: number;
-  overallProgress: number;
-  avgQuizScore: number;
+  totalLessonsCompleted: number;
+  overallProgressPercent: number;
+  averageQuizScore: number;
+  totalQuizzesTaken: number;
   courses: DashboardCourseDto[];
 }
 
@@ -227,7 +229,6 @@ export interface DashboardCourseDto {
   progressPercent: number;
   completedLessons: number;
   totalLessons: number;
-  quizAvgScore: number;
 }
 
 // === Pagination ===

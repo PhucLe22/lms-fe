@@ -43,7 +43,7 @@ export default function DashboardPage() {
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card padding="md">
-          <p className="text-2xl font-semibold text-gray-900">{data.enrolledCourses}</p>
+          <p className="text-2xl font-semibold text-gray-900">{data.totalEnrolledCourses}</p>
           <p className="text-xs text-gray-500 mt-0.5">Enrolled</p>
         </Card>
         <Card padding="md">
@@ -51,11 +51,11 @@ export default function DashboardPage() {
           <p className="text-xs text-gray-500 mt-0.5">Completed</p>
         </Card>
         <Card padding="md">
-          <p className="text-2xl font-semibold text-gray-900">{Math.round(data.overallProgress)}%</p>
+          <p className="text-2xl font-semibold text-gray-900">{Math.round(data.overallProgressPercent)}%</p>
           <p className="text-xs text-gray-500 mt-0.5">Overall Progress</p>
         </Card>
         <Card padding="md">
-          <p className="text-2xl font-semibold text-gray-900">{Math.round(data.avgQuizScore)}%</p>
+          <p className="text-2xl font-semibold text-gray-900">{Math.round(data.averageQuizScore)}%</p>
           <p className="text-xs text-gray-500 mt-0.5">Avg Quiz Score</p>
         </Card>
       </div>
@@ -77,9 +77,6 @@ export default function DashboardPage() {
                   <ProgressBar value={course.progressPercent} size="sm" />
                   <div className="flex justify-between mt-2 text-xs text-gray-400">
                     <span>{Math.round(course.progressPercent)}% complete</span>
-                    {course.quizAvgScore > 0 && (
-                      <span>Quiz avg: {Math.round(course.quizAvgScore)}%</span>
-                    )}
                   </div>
                 </Card>
               </Link>

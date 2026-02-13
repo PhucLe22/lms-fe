@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import { authApi } from "../../api/authApi";
 import { useAuth } from "../../hooks/useAuth";
 import type { LoginRequest } from "../../types";
@@ -25,6 +26,24 @@ export default function LoginPage() {
       navigate("/");
     } catch {
       setError("Invalid email or password");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
+    if (!credentialResponse.credential) {
+      setError("Google login failed. Please try again.");
+      return;
+    }
+    setError("");
+    setIsLoading(true);
+    try {
+      const res = await authApi.googleLogin(credentialResponse.credential);
+      login(res.data);
+      navigate("/");
+    } catch {
+      setError("Google login failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -82,6 +101,23 @@ export default function LoginPage() {
             </Link>
           </div>
         </form>
+
+        <div className="relative my-5">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-white px-2 text-gray-400">or continue with</span>
+          </div>
+        </div>
+
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError("Google login failed. Please try again.")}
+            width="340"
+          />
+        </div>
 
         <p className="text-center mt-5 text-sm text-gray-500">
           Don't have an account?{" "}

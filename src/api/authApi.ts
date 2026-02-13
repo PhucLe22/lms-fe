@@ -8,6 +8,9 @@ export const authApi = {
   login: (data: LoginRequest) =>
     axiosClient.post<AuthResponse>("/auth/login", data),
 
+  googleLogin: (idToken: string) =>
+    axiosClient.post<AuthResponse>("/auth/google", { idToken }),
+
   getMe: () =>
     axiosClient.get<User>("/auth/me"),
 

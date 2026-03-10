@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { adminApi } from "../../api/adminApi";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../hooks/useToast";
 import type { StudentListDto, PaginatedResult } from "../../types";
+
+const SUPER_ADMIN_EMAIL = "admin@lms.com";
 import PageHeader from "../../components/ui/PageHeader";
 import Badge from "../../components/ui/Badge";
 import Spinner from "../../components/ui/Spinner";
@@ -19,6 +22,8 @@ export default function AdminStudentsPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [roleLoading, setRoleLoading] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.email === SUPER_ADMIN_EMAIL;
   const debouncedSearch = useDebounce(search, 300);
 
   useEffect(() => {
@@ -153,14 +158,14 @@ export default function AdminStudentsPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {student.role !== "Admin" && (
+                        {isSuperAdmin && student.email !== SUPER_ADMIN_EMAIL && (
                           <>
                             <button
                               onClick={() => handleToggleRole(student)}
                               disabled={roleLoading === student.id}
                               className="text-xs text-gray-500 hover:text-gray-900 px-2 py-1 rounded hover:bg-gray-100 transition-colors disabled:opacity-50 cursor-pointer"
                             >
-                              {roleLoading === student.id ? "..." : "Make Admin"}
+                              {roleLoading === student.id ? "..." : student.role === "Admin" ? "Make Student" : "Make Admin"}
                             </button>
                             <button
                               onClick={() => setDeleteTarget(student)}

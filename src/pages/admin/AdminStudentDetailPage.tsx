@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { adminApi } from "../../api/adminApi";
+import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../hooks/useToast";
 import type { StudentDetailDto } from "../../types";
+
+const SUPER_ADMIN_EMAIL = "admin@lms.com";
 import PageHeader from "../../components/ui/PageHeader";
 import Card from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
@@ -17,6 +20,8 @@ export default function AdminStudentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.email === SUPER_ADMIN_EMAIL;
   const [student, setStudent] = useState<StudentDetailDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -91,7 +96,7 @@ export default function AdminStudentDetailPage() {
         backTo="/admin/students"
         backLabel="Students"
         actions={
-          student.role !== "Admin" ? (
+          isSuperAdmin && student.email !== SUPER_ADMIN_EMAIL ? (
             <div className="flex items-center gap-2">
               <Button
                 variant="secondary"
@@ -99,7 +104,7 @@ export default function AdminStudentDetailPage() {
                 onClick={handleToggleRole}
                 loading={roleLoading}
               >
-                Make Admin
+                {student.role === "Admin" ? "Make Student" : "Make Admin"}
               </Button>
               <Button
                 variant="danger"

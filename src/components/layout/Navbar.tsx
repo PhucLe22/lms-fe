@@ -2,16 +2,19 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import Button from "../ui/Button";
+import ConfirmDialog from "../ui/ConfirmDialog";
 
 export default function Navbar() {
   const { user, isAdmin, isStudent, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate("/");
+    setShowLogout(false);
   };
 
   const isActive = (path: string) =>
@@ -95,7 +98,7 @@ export default function Navbar() {
                 </div>
                 <span className="text-sm text-gray-600">{user.fullName}</span>
               </div>
-              <Button variant="ghost" size="sm" onClick={handleLogout} className="hidden md:inline-flex">
+              <Button variant="ghost" size="sm" onClick={() => setShowLogout(true)} className="hidden md:inline-flex">
                 Log out
               </Button>
 
@@ -155,13 +158,22 @@ export default function Navbar() {
             </>
           )}
           <button
-            onClick={() => { setMobileOpen(false); handleLogout(); }}
+            onClick={() => { setMobileOpen(false); setShowLogout(true); }}
             className="block w-full text-left py-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer"
           >
             Log out
           </button>
         </div>
       )}
+      <ConfirmDialog
+        open={showLogout}
+        title="Log out"
+        message="Are you sure you want to log out?"
+        confirmLabel="Log out"
+        variant="danger"
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogout(false)}
+      />
     </nav>
   );
 }

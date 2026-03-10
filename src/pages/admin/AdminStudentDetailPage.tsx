@@ -91,23 +91,25 @@ export default function AdminStudentDetailPage() {
         backTo="/admin/students"
         backLabel="Students"
         actions={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleToggleRole}
-              loading={roleLoading}
-            >
-              {student.role === "Admin" ? "Make Student" : "Make Admin"}
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => setShowDelete(true)}
-            >
-              Delete
-            </Button>
-          </div>
+          student.role !== "Admin" ? (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleToggleRole}
+                loading={roleLoading}
+              >
+                Make Admin
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => setShowDelete(true)}
+              >
+                Delete
+              </Button>
+            </div>
+          ) : undefined
         }
       />
 

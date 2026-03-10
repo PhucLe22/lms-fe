@@ -153,19 +153,23 @@ export default function AdminStudentsPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => handleToggleRole(student)}
-                          disabled={roleLoading === student.id}
-                          className="text-xs text-gray-500 hover:text-gray-900 px-2 py-1 rounded hover:bg-gray-100 transition-colors disabled:opacity-50 cursor-pointer"
-                        >
-                          {roleLoading === student.id ? "..." : student.role === "Admin" ? "Make Student" : "Make Admin"}
-                        </button>
-                        <button
-                          onClick={() => setDeleteTarget(student)}
-                          className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50 transition-colors cursor-pointer"
-                        >
-                          Delete
-                        </button>
+                        {student.role !== "Admin" && (
+                          <>
+                            <button
+                              onClick={() => handleToggleRole(student)}
+                              disabled={roleLoading === student.id}
+                              className="text-xs text-gray-500 hover:text-gray-900 px-2 py-1 rounded hover:bg-gray-100 transition-colors disabled:opacity-50 cursor-pointer"
+                            >
+                              {roleLoading === student.id ? "..." : "Make Admin"}
+                            </button>
+                            <button
+                              onClick={() => setDeleteTarget(student)}
+                              className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50 transition-colors cursor-pointer"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
